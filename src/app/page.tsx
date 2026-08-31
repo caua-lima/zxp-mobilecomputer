@@ -1,10 +1,26 @@
 import Link from "next/link";
 
 import { sair } from "./acoes";
+import { Busca } from "@/components/Busca";
+import { CapturaRapida } from "@/components/CapturaRapida";
 import { CartaoItem } from "@/components/CartaoItem";
 import { exigirSessao } from "@/lib/guarda";
-import { ehTipo, listar, rotuloTipo, tagsEmUso, tipos, type Item } from "@/lib/itens";
+import {
+  ehTipo,
+  listar,
+  resumoDoAcervo,
+  rotuloTipo,
+  tipos,
+  type Item,
+  type ResumoDoAcervo,
+} from "@/lib/itens";
 import { bancoConfigurado } from "@/lib/supabase";
+
+const acervoVazio: ResumoDoAcervo = {
+  tags: [],
+  porTipo: { projeto: 0, ideia: 0, nota: 0, referencia: 0 },
+  arquivados: 0,
+};
 
 function texto(valor: string | string[] | undefined) {
   return typeof valor === "string" ? valor : "";
@@ -21,14 +37,14 @@ export default async function Painel(props: PageProps<"/">) {
   const arquivados = texto(parametros.arquivados) === "1";
 
   let itens: Item[] = [];
-  let tags: { tag: string; total: number }[] = [];
+  let acervo = acervoVazio;
   let falha = "";
 
   if (bancoConfigurado()) {
     try {
-      [itens, tags] = await Promise.all([
+      [itens, acervo] = await Promise.all([
         listar({ busca, tipo, tag, incluirArquivados: arquivados }),
-        tagsEmUso(),
+        resumoDoAcervo(),
       ]);
     } catch (erro) {
       console.error("[painel] falha ao listar:", erro);
@@ -36,6 +52,9 @@ export default async function Painel(props: PageProps<"/">) {
         "Não consegui falar com o banco. Confere as variáveis do Supabase e se a tabela `itens` já foi criada.";
     }
   }
+
+  const totalNoAcervo = Object.values(acervo.porTipo).reduce((a, b) => a + b, 0);
+  const filtrando = Boolean(busca || tipo || tag);
 
   /** Monta um link mantendo os filtros que já estão ligados. */
   function comFiltro(mudanca: Record<string, string | undefined>) {
@@ -56,6 +75,12 @@ export default async function Painel(props: PageProps<"/">) {
     return query ? `/?${query}` : "/";
   }
 
+  // Os filtros que não são a busca, prontos pra barra de busca remontar a URL.
+  const outrosFiltros = new URLSearchParams();
+  if (tipo) outrosFiltros.set("tipo", tipo);
+  if (tag) outrosFiltros.set("tag", tag);
+  if (arquivados) outrosFiltros.set("arquivados", "1");
+
   const chip = (ativo: boolean) =>
     `rounded-full border px-3 py-1 text-xs transition-colors ${
       ativo
@@ -71,7 +96,9 @@ export default async function Painel(props: PageProps<"/">) {
         </Link>
 
         <span className="text-xs text-suave">
-          {itens.length} {itens.length === 1 ? "item" : "itens"}
+          {filtrando
+            ? `${itens.length} de ${totalNoAcervo}`
+            : `${itens.length} ${itens.length === 1 ? "item" : "itens"}`}
         </span>
 
         <div className="ml-auto flex items-center gap-2">
@@ -106,21 +133,15 @@ export default async function Painel(props: PageProps<"/">) {
         </p>
       )}
 
-      <form action="/" className="mb-3">
-        {tipo && <input type="hidden" name="tipo" value={tipo} />}
-        {tag && <input type="hidden" name="tag" value={tag} />}
-        {arquivados && <input type="hidden" name="arquivados" value="1" />}
+      <CapturaRapida tipoPadrao={tipo ?? "ideia"} tagAtual={tag || undefined} />
 
-        <input
-          type="search"
-          name="q"
-          defaultValue={busca}
-          placeholder="Buscar no título e no conteúdo…"
-          className="w-full rounded-xl border border-borda bg-superficie px-4 py-2.5 text-sm text-texto outline-none transition-colors focus:border-destaque placeholder:text-suave/60"
-        />
-      </form>
+      <Busca valor={busca} extras={outrosFiltros.toString()} />
 
-      <div className="mb-3 flex flex-wrap gap-1.5">
+      {/*
+        No celular os filtros rolam de lado em vez de empilhar: três linhas de
+        etiqueta empurrariam os itens pra fora da tela logo na abertura.
+      */}
+      <div className="mb-3 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 whitespace-nowrap sm:flex-wrap sm:overflow-visible">
         <Link href={comFiltro({ tipo: undefined })} className={chip(!tipo)}>
           Tudo
         </Link>
@@ -132,27 +153,30 @@ export default async function Painel(props: PageProps<"/">) {
             className={chip(tipo === valor)}
           >
             {rotuloTipo[valor]}
+            {acervo.porTipo[valor] > 0 && (
+              <span className="ml-1 text-suave/60">{acervo.porTipo[valor]}</span>
+            )}
           </Link>
         ))}
 
-        <Link
-          href={comFiltro({ arquivados: arquivados ? undefined : "1" })}
-          className={`${chip(arquivados)} ml-auto`}
-        >
-          {arquivados ? "Ocultar arquivados" : "Ver arquivados"}
-        </Link>
+        {(arquivados || acervo.arquivados > 0) && (
+          <Link
+            href={comFiltro({ arquivados: arquivados ? undefined : "1" })}
+            className={`${chip(arquivados)} ml-auto`}
+          >
+            {arquivados ? "Ocultar arquivados" : `Arquivados ${acervo.arquivados}`}
+          </Link>
+        )}
       </div>
 
-      {tags.length > 0 && (
-        <div className="mb-5 flex flex-wrap gap-1.5">
-          {tag && (
+      {(acervo.tags.length > 0 || tag) && (
+        <div className="mb-5 flex flex-nowrap gap-1.5 overflow-x-auto pb-1 whitespace-nowrap sm:flex-wrap sm:overflow-visible">
+          {tag ? (
             <Link href={comFiltro({ tag: undefined })} className={chip(true)}>
               #{tag} ✕
             </Link>
-          )}
-
-          {!tag &&
-            tags.slice(0, 12).map(({ tag: nome, total }) => (
+          ) : (
+            acervo.tags.slice(0, 12).map(({ tag: nome, total }) => (
               <Link
                 key={nome}
                 href={comFiltro({ tag: nome })}
@@ -160,23 +184,48 @@ export default async function Painel(props: PageProps<"/">) {
               >
                 #{nome} <span className="text-suave/60">{total}</span>
               </Link>
-            ))}
+            ))
+          )}
         </div>
       )}
 
       {itens.length === 0 && !falha ? (
-        <div className="rounded-2xl border border-dashed border-borda px-6 py-16 text-center">
-          <p className="text-sm text-suave">
-            {busca || tipo || tag
-              ? "Nada com esses filtros."
-              : "Vazio por enquanto. O primeiro item pode ser aquela ideia que você não quer esquecer."}
-          </p>
-          <Link
-            href="/novo"
-            className="mt-4 inline-block rounded-lg border border-borda px-4 py-2 text-sm transition-colors hover:border-destaque hover:text-destaque"
-          >
-            Criar item
-          </Link>
+        <div className="rounded-2xl border border-dashed border-borda px-6 py-12 text-center">
+          {filtrando ? (
+            <>
+              <p className="text-sm text-suave">Nada com esses filtros.</p>
+              <Link
+                href="/"
+                className="mt-4 inline-block rounded-lg border border-borda px-4 py-2 text-sm transition-colors hover:border-destaque hover:text-destaque"
+              >
+                Limpar filtros
+              </Link>
+            </>
+          ) : (
+            <div className="mx-auto max-w-md text-left">
+              <p className="text-center text-sm text-texto">
+                Vazio por enquanto.
+              </p>
+
+              <ul className="mt-5 flex flex-col gap-2.5 text-sm text-suave">
+                <li>
+                  <strong className="font-medium text-texto">Anote em cima</strong>{" "}
+                  — uma frase e Enter. Organizar é outro momento.
+                </li>
+                <li>
+                  <strong className="font-medium text-texto">Dentro do item</strong>{" "}
+                  markdown vira formatação: <code>#</code> título,{" "}
+                  <code>-</code> lista, <code>- [ ]</code> tarefa (que dá pra
+                  marcar com um toque).
+                </li>
+                <li>
+                  <strong className="font-medium text-texto">No computador</strong>
+                  , <code>nuvem push</code> sincroniza uma pasta de arquivos{" "}
+                  <code>.md</code> com isto aqui.
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -184,6 +233,12 @@ export default async function Painel(props: PageProps<"/">) {
             <CartaoItem key={item.id} item={item} />
           ))}
         </div>
+      )}
+
+      {itens.length > 0 && (
+        <p className="mt-6 hidden text-center text-[11px] text-suave/60 sm:block">
+          atalhos: <kbd>/</kbd> buscar · <kbd>n</kbd> novo
+        </p>
       )}
     </main>
   );

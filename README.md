@@ -52,11 +52,24 @@ npm run dev
 
 Abre <http://localhost:3000>, entra com a `SENHA` e cria o primeiro item.
 
-## Passo 4 — publicar
+## Passo 4 — GitHub e Vercel
 
-Suba o repositório para o GitHub e importe em [vercel.com/new](https://vercel.com/new).
-Em **Settings > Environment Variables**, cadastre as mesmas cinco variáveis do
-passo 2. Cada `git push` na `main` republica o painel.
+O repositório local já existe, com o primeiro commit na `main`. Pra criar o
+repositório remoto (privado) e mandar tudo:
+
+```bash
+gh auth login && gh repo create zxp-mobilecomputer --private --source=. --push
+```
+
+Sem o `gh`: crie o repositório vazio pelo site e depois
+
+```bash
+git remote add origin https://github.com/SEU-USUARIO/zxp-mobilecomputer.git && git push -u origin main
+```
+
+Depois importe em [vercel.com/new](https://vercel.com/new) e, em **Settings >
+Environment Variables**, cadastre as mesmas cinco variáveis do passo 2. Daí em
+diante, cada `git push` na `main` republica o painel.
 
 No celular: abra o endereço da Vercel, "Adicionar à tela de início", e ele abre
 como aplicativo, sem barra de navegador.
@@ -77,6 +90,23 @@ Sem `npm link`, use `node caminho/para/cli/nuvem.mjs` ou `npm run nuvem --` no
 lugar de `nuvem`.
 
 ---
+
+## Como o painel funciona
+
+- **Anotar é uma linha.** A caixa do topo cria o item com o título e mais nada:
+  escreve, Enter, pronto — o campo já fica limpo pro próximo. Anotar e organizar
+  são momentos diferentes, e o segundo só acontece se o primeiro for rápido.
+  Se você estiver filtrando por uma tag, o item já nasce com ela.
+- **A busca acontece enquanto você digita**, sem botão e sem Enter.
+- **O item abre pra ler.** Tocar no texto abre a edição com o cursor naquela
+  linha; tocar no `○` de uma tarefa marca a tarefa sem sair da leitura.
+- **Salva sozinho.** Item que já existe grava um instante depois que você para
+  de escrever — o canto de cima diz "salvando…", "salvo 14:32" ou "não salvo".
+  Item novo espera o clique em Criar, pra você não encher a lista de rascunho
+  vazio. Se a gravação falhar, o texto continua na tela e o erro aparece; ele
+  não fica insistindo sozinho, e o botão Salvar tenta de novo quando você quiser.
+- **Atalhos** (no computador): `/` busca, `n` cria, `Ctrl+S` salva, `Esc` volta
+  pra leitura.
 
 ## O dia a dia
 
@@ -147,11 +177,12 @@ src/
     item/[slug]/page.tsx  abrir e editar
     novo/page.tsx         criar
     entrar/page.tsx       login
-    acoes.ts              Server Actions (entrar, sair, salvar, apagar)
+    acoes.ts              Server Actions (entrar, sair, anotar, salvar, apagar)
     api/sync/route.ts     a porta do CLI (token no header, não cookie)
-  components/             Editor, CartaoItem, FormEntrar, Etiqueta
+  components/             Editor, CapturaRapida, Busca, CartaoItem, Etiqueta
   lib/
-    itens.ts              o domínio: tipos, slug, hash, CRUD
+    tipos.ts              vocabulário puro (tipos, slug, hash) — roda nos dois lados
+    itens.ts              tudo que fala com a tabela
     supabase.ts           REST do Supabase, sem SDK
     sessao.ts             HMAC do cookie e conferência dos segredos
     markdown.ts           markdown -> HTML, escapando antes
@@ -172,6 +203,9 @@ supabase/schema.sql       a tabela
   "isto foi apagado" de "isto ainda não chegou aqui", e apagaria arquivo à toa.
 - **A sessão é um cookie assinado.** Um usuário, uma senha, zero tabela de
   usuários. Trocar `SESSAO_SEGREDO` desconecta tudo.
+- **Nenhuma ação deixa o erro subir.** Se o banco não responder, a resposta é
+  uma mensagem na tela — nunca a página de erro, que levaria junto o texto que
+  você acabou de escrever e ainda não foi gravado.
 
 ## Se um dia quiser mais
 

@@ -102,22 +102,48 @@ export async function porSlugBruto(slug: string): Promise<Item | null> {
   return item ?? null;
 }
 
-/** Todas as tags em uso, da mais usada pra menos. Alimenta os filtros do painel. */
-export async function tagsEmUso(): Promise<{ tag: string; total: number }[]> {
-  const linhas = await selecionar<{ tags: string[] }>(
-    "itens?select=tags&apagado_em=is.null&limit=1000",
+export type ResumoDoAcervo = {
+  tags: { tag: string; total: number }[];
+  porTipo: Record<Tipo, number>;
+  arquivados: number;
+};
+
+/**
+ * O que o painel precisa saber sobre o acervo inteiro, e não só sobre a lista
+ * filtrada: quantos itens tem cada tipo, quais tags existem e quantos itens
+ * estão arquivados.
+ *
+ * Uma consulta só, trazendo três colunas curtas. Contar no Postgres exigiria
+ * três `count` separados ou uma view — e a diferença, num acervo pessoal, é
+ * invisível.
+ */
+export async function resumoDoAcervo(): Promise<ResumoDoAcervo> {
+  const linhas = await selecionar<{ tipo: Tipo; tags: string[]; status: string }>(
+    "itens?select=tipo,tags,status&apagado_em=is.null&limit=2000",
   );
 
+  const porTipo = { projeto: 0, ideia: 0, nota: 0, referencia: 0 };
   const contagem = new Map<string, number>();
+  let arquivados = 0;
+
   for (const linha of linhas) {
+    if (linha.status === "arquivado") {
+      arquivados++;
+      continue;
+    }
+
+    porTipo[linha.tipo] = (porTipo[linha.tipo] ?? 0) + 1;
+
     for (const tag of linha.tags ?? []) {
       contagem.set(tag, (contagem.get(tag) ?? 0) + 1);
     }
   }
 
-  return [...contagem.entries()]
+  const tags = [...contagem.entries()]
     .map(([tag, total]) => ({ tag, total }))
     .sort((a, b) => b.total - a.total || a.tag.localeCompare(b.tag));
+
+  return { tags, porTipo, arquivados };
 }
 
 export async function criarItem(

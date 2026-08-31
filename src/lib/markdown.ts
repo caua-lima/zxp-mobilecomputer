@@ -45,9 +45,18 @@ export function markdownParaHtml(texto: string): string {
   let citacao: string[] = [];
   let codigo: string[] | null = null;
 
+  // Cada bloco carrega a linha onde começou no texto original. É isso que faz
+  // um toque na leitura abrir o editor com o cursor naquele exato ponto, em vez
+  // de jogar você no começo de tudo pra procurar de novo onde estava.
+  let inicioParagrafo = 0;
+  let inicioCitacao = 0;
+  let inicioCodigo = 0;
+
   const fecharParagrafo = () => {
     if (paragrafo.length) {
-      saida.push(`<p>${inline(paragrafo.join(" "))}</p>`);
+      saida.push(
+        `<p data-linha="${inicioParagrafo}">${inline(paragrafo.join(" "))}</p>`,
+      );
       paragrafo = [];
     }
   };
@@ -61,7 +70,9 @@ export function markdownParaHtml(texto: string): string {
 
   const fecharCitacao = () => {
     if (citacao.length) {
-      saida.push(`<blockquote>${inline(citacao.join(" "))}</blockquote>`);
+      saida.push(
+        `<blockquote data-linha="${inicioCitacao}">${inline(citacao.join(" "))}</blockquote>`,
+      );
       citacao = [];
     }
   };
@@ -72,14 +83,17 @@ export function markdownParaHtml(texto: string): string {
     fecharCitacao();
   };
 
-  for (const linha of linhas) {
+  for (const [numeroDaLinha, linha] of linhas.entries()) {
     if (linha.trimStart().startsWith("```")) {
       if (codigo) {
-        saida.push(`<pre><code>${codigo.join("\n")}</code></pre>`);
+        saida.push(
+          `<pre data-linha="${inicioCodigo}"><code>${codigo.join("\n")}</code></pre>`,
+        );
         codigo = null;
       } else {
         fecharTudo();
         codigo = [];
+        inicioCodigo = numeroDaLinha;
       }
       continue;
     }
@@ -98,7 +112,9 @@ export function markdownParaHtml(texto: string): string {
     if (titulo) {
       fecharTudo();
       const nivel = titulo[1].length + 1; // # vira h2: o h1 é o título do item.
-      saida.push(`<h${nivel}>${inline(titulo[2])}</h${nivel}>`);
+      saida.push(
+        `<h${nivel} data-linha="${numeroDaLinha}">${inline(titulo[2])}</h${nivel}>`,
+      );
       continue;
     }
 
@@ -127,13 +143,17 @@ export function markdownParaHtml(texto: string): string {
 
       if (tarefa) {
         const feita = tarefa[1].toLowerCase() === "x";
+        // Só a marca é botão. O texto ao lado continua sendo texto — quem quer
+        // corrigir a frase não marca a tarefa sem querer.
         saida.push(
-          `<li class="tarefa${feita ? " feita" : ""}">` +
-            `<span aria-hidden="true">${feita ? "✔" : "○"}</span>` +
+          `<li class="tarefa${feita ? " feita" : ""}" data-linha="${numeroDaLinha}">` +
+            `<span class="marca" data-tarefa="${numeroDaLinha}" role="button" ` +
+            `aria-label="${feita ? "Desmarcar" : "Marcar"} tarefa">` +
+            `${feita ? "✔" : "○"}</span>` +
             `<span>${inline(tarefa[2])}</span></li>`,
         );
       } else {
-        saida.push(`<li>${inline(conteudo)}</li>`);
+        saida.push(`<li data-linha="${numeroDaLinha}">${inline(conteudo)}</li>`);
       }
 
       continue;
@@ -143,19 +163,53 @@ export function markdownParaHtml(texto: string): string {
     if (citada) {
       fecharParagrafo();
       fecharLista();
+      if (!citacao.length) inicioCitacao = numeroDaLinha;
       citacao.push(citada[1]);
       continue;
     }
 
     fecharLista();
     fecharCitacao();
+    if (!paragrafo.length) inicioParagrafo = numeroDaLinha;
     paragrafo.push(linha.trim());
   }
 
-  if (codigo) saida.push(`<pre><code>${codigo.join("\n")}</code></pre>`);
+  if (codigo) {
+    saida.push(
+      `<pre data-linha="${inicioCodigo}"><code>${codigo.join("\n")}</code></pre>`,
+    );
+  }
   fecharTudo();
 
   return saida.join("\n");
+}
+
+/**
+ * Marca ou desmarca a tarefa daquela linha e devolve o texto inteiro.
+ *
+ * Trabalha no markdown, não no HTML: a fonte da verdade continua sendo o texto
+ * que você escreveu — o que o `nuvem pull` traz é isto, não uma marcação
+ * paralela guardada em outro lugar.
+ */
+export function alternarTarefa(texto: string, numeroDaLinha: number) {
+  const linhas = texto.split("\n");
+  const linha = linhas[numeroDaLinha];
+
+  if (linha === undefined) return texto;
+
+  linhas[numeroDaLinha] = linha.replace(/\[([ xX])\]/, (todo, marca) =>
+    marca === " " ? "[x]" : "[ ]",
+  );
+
+  return linhas.join("\n");
+}
+
+/** Quantas tarefas existem e quantas já foram feitas. Vira "2/5" no cartão. */
+export function contarTarefas(texto: string) {
+  const tarefas = texto.match(/^\s*[-*+]\s+\[[ xX]\]/gm) ?? [];
+  const feitas = tarefas.filter((linha) => /\[[xX]\]/.test(linha)).length;
+
+  return { total: tarefas.length, feitas };
 }
 
 /** Texto limpo pro cartão da lista: sem marcação, sem quebra de linha. */

@@ -1,15 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 
 import { entrar } from "@/app/acoes";
 import { estadoInicial } from "@/lib/formulario";
 
 export function FormEntrar({ destino }: { destino: string }) {
   const [estado, acao, entrando] = useActionState(entrar, estadoInicial);
+  const formulario = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={acao} className="flex flex-col gap-3">
+    <form ref={formulario} action={acao} className="flex flex-col gap-3">
       <input type="hidden" name="destino" value={destino} />
 
       <input
@@ -18,6 +19,11 @@ export function FormEntrar({ destino }: { destino: string }) {
         autoFocus
         autoComplete="current-password"
         placeholder="Senha"
+        onKeyDown={(evento) => {
+          if (evento.key !== "Enter") return;
+          evento.preventDefault();
+          formulario.current?.requestSubmit();
+        }}
         className="rounded-xl border border-borda bg-superficie px-4 py-3 text-base text-texto outline-none transition-colors focus:border-destaque placeholder:text-suave/60"
       />
 

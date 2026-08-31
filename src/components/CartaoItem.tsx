@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Etiqueta } from "@/components/Etiqueta";
 import { quandoFoi } from "@/lib/datas";
-import { resumo } from "@/lib/markdown";
+import { contarTarefas, resumo } from "@/lib/markdown";
 import { rotuloSituacao, rotuloTipo, type Item, type Situacao } from "@/lib/tipos";
 
 const tomDaSituacao: Record<Situacao, "neutro" | "verde" | "amarelo"> = {
@@ -14,6 +14,7 @@ const tomDaSituacao: Record<Situacao, "neutro" | "verde" | "amarelo"> = {
 
 export function CartaoItem({ item }: { item: Item }) {
   const previa = resumo(item.conteudo);
+  const tarefas = contarTarefas(item.conteudo);
 
   return (
     <Link
@@ -22,11 +23,19 @@ export function CartaoItem({ item }: { item: Item }) {
     >
       <div className="flex flex-wrap items-center gap-2">
         <Etiqueta tom="destaque">{rotuloTipo[item.tipo]}</Etiqueta>
+
         {item.status !== "ativo" && (
           <Etiqueta tom={tomDaSituacao[item.status]}>
             {rotuloSituacao[item.status]}
           </Etiqueta>
         )}
+
+        {tarefas.total > 0 && (
+          <Etiqueta tom={tarefas.feitas === tarefas.total ? "verde" : "neutro"}>
+            {tarefas.feitas}/{tarefas.total}
+          </Etiqueta>
+        )}
+
         <span className="ml-auto text-[11px] text-suave">
           {quandoFoi(item.atualizado_em)}
         </span>

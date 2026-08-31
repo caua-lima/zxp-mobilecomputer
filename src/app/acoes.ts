@@ -30,6 +30,17 @@ import {
   senhaConfere,
 } from "@/lib/sessao";
 
+/**
+ * O que a pessoa vê quando o banco não responde.
+ *
+ * Nunca deixar a exceção subir é a regra aqui: se ela subir, o Next troca a
+ * página inteira pela tela de erro — e leva junto o texto que você acabou de
+ * escrever e ainda não foi gravado. Errar salvando é aceitável; errar perdendo
+ * o que a pessoa escreveu, não.
+ */
+const falhaDeGravacao =
+  "Não consegui salvar agora. Seu texto continua aqui — tenta de novo em instantes.";
+
 async function identificacao() {
   const cabecalhos = await headers();
   return cabecalhos.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -102,15 +113,30 @@ export async function salvarItem(
   const slug = String(dados.get("slug") ?? "");
 
   if (!slug) {
-    const criado = await criarItem(campos);
+    let novoSlug: string;
+
+    try {
+      novoSlug = (await criarItem(campos)).slug;
+    } catch (erro) {
+      console.error("[salvar] falha ao criar:", erro);
+      return { erro: falhaDeGravacao, falhouEm: Date.now() };
+    }
+
     revalidatePath("/");
-    redirect(`/item/${criado.slug}`);
+    // Fora do try de propósito: redirect() funciona lançando uma exceção que o
+    // Next entende. Dentro, o catch engoliria a navegação.
+    redirect(`/item/${novoSlug}`);
   }
 
-  const existente = await porSlug(slug);
-  if (!existente) return { erro: "Esse item não existe mais." };
+  try {
+    const existente = await porSlug(slug);
+    if (!existente) return { erro: "Esse item não existe mais." };
 
-  await atualizarItem(slug, campos);
+    await atualizarItem(slug, campos);
+  } catch (erro) {
+    console.error("[salvar] falha ao atualizar:", erro);
+    return { erro: falhaDeGravacao, falhouEm: Date.now() };
+  }
 
   revalidatePath("/");
   revalidatePath(`/item/${slug}`);
@@ -118,11 +144,54 @@ export async function salvarItem(
   return { salvoEm: Date.now() };
 }
 
+/**
+ * Captura rápida: só o título, direto da lista.
+ *
+ * Existe porque anotar e organizar são momentos diferentes. Na rua você tem
+ * cinco segundos e uma frase; escolher tipo, tag e escrever o corpo é coisa
+ * pra depois — e "depois" só acontece se a frase tiver sido salva agora.
+ */
+export async function capturar(
+  _anterior: EstadoForm,
+  dados: FormData,
+): Promise<EstadoForm> {
+  await exigirSessao();
+
+  const campos = normalizarCampos({
+    titulo: dados.get("titulo"),
+    tipo: dados.get("tipo"),
+    status: "ativo",
+    tags: dados.get("tag") ?? "",
+    conteudo: "",
+  });
+
+  if (!campos.titulo) return {};
+
+  try {
+    const criado = await criarItem(campos);
+    revalidatePath("/");
+
+    return { salvoEm: Date.now(), slug: criado.slug, titulo: criado.titulo };
+  } catch (erro) {
+    console.error("[capturar] falha ao criar:", erro);
+    return { erro: falhaDeGravacao, falhouEm: Date.now() };
+  }
+}
+
 export async function apagar(dados: FormData) {
   await exigirSessao();
 
   const slug = String(dados.get("slug") ?? "");
-  if (slug) await apagarItem(slug);
+
+  if (slug) {
+    try {
+      await apagarItem(slug);
+    } catch (erro) {
+      console.error("[apagar] falha:", erro);
+      // Sem redirect: a tela do item continua onde está, com o texto intacto.
+      return;
+    }
+  }
 
   revalidatePath("/");
   redirect("/");

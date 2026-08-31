@@ -118,8 +118,19 @@
     align-items: baseline;
   }
 
-  .prosa li.tarefa > span:first-child {
+  /* A marca da tarefa é botão: alvo generoso pro dedo, e visivelmente clicável. */
+  .prosa li.tarefa .marca {
     color: var(--color-destaque);
+    cursor: pointer;
+    padding: 0.15rem 0.4rem;
+    margin: -0.15rem -0.4rem;
+    border-radius: 0.4rem;
+    user-select: none;
+    transition: background-color 0.12s ease;
+  }
+
+  .prosa li.tarefa .marca:hover {
+    background: color-mix(in oklab, var(--color-destaque) 18%, transparent);
   }
 
   .prosa li.tarefa.feita > span:last-child {
@@ -127,8 +138,13 @@
     text-decoration: line-through;
   }
 
-  .prosa li.tarefa.feita > span:first-child {
+  .prosa li.tarefa.feita .marca {
     color: var(--color-verde);
+  }
+
+  /* O bloco todo é clicável (abre a edição), então o cursor combina com isso. */
+  .prosa [data-linha] {
+    cursor: text;
   }
 
   .prosa blockquote {
