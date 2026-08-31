@@ -123,7 +123,8 @@ Duas opções, quando precisar:
   lados: apagar arquivo é a operação que não tem desfazer, então é sempre um
   pedido explícito.
 - `--forcar` — resolve conflito. No `push`, vale a versão daqui; no `pull`, vale
-  a da nuvem e a sua cópia é guardada como `.local.md` ao lado.
+  a da nuvem e a sua cópia é guardada como `.local.md` ao lado. Esse arquivo de
+  cópia fica de fora da sincronização — compare o que interessa e apague.
 
 ### Os arquivos
 

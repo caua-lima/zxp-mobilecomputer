@@ -246,6 +246,11 @@ async function lerArquivos(raiz) {
     for (const nome of await readdir(completo)) {
       if (!nome.endsWith(".md")) continue;
 
+      // O .local.md é a cópia guardada num conflito: ele tem o mesmo slug do
+      // arquivo bom e, se entrasse aqui, os dois disputariam o mesmo item —
+      // com a sua versão descartada voltando a ser enviada.
+      if (nome.endsWith(".local.md")) continue;
+
       const relativo = `${pasta}/${nome}`;
       const texto = normalizar(await readFile(path.join(raiz, relativo), "utf8"));
       const { campos, corpo } = lerFrontmatter(texto);

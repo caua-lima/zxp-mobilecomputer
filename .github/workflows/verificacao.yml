@@ -1,0 +1,32 @@
+# Confere lint, tipos e build a cada push na main.
+#
+# Não precisa de segredo nenhum: o app só lê as variáveis de ambiente quando
+# atende uma requisição, então o build passa sem banco. Se este check ficar
+# vermelho, a Vercel também vai falhar — melhor descobrir aqui.
+
+name: verificação
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: lint
+        run: npx eslint src cli
+
+      - name: build (inclui a checagem de tipos)
+        run: npm run build
