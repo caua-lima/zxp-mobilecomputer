@@ -4,7 +4,7 @@
  *
  * Nada aqui toca no banco, e é por isso que este arquivo existe separado de
  * `itens.ts`: o editor roda no navegador e precisa dos rótulos e dos tipos —
- * mas o módulo que carrega a chave do Supabase não tem o que fazer lá.
+ * mas o módulo que carrega a chave do Firebase não tem o que fazer lá.
  */
 
 export const tipos = ["projeto", "ideia", "nota", "referencia"] as const;

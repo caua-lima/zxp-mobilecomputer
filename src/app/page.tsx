@@ -14,7 +14,7 @@ import {
   type Item,
   type ResumoDoAcervo,
 } from "@/lib/itens";
-import { bancoConfigurado } from "@/lib/supabase";
+import { bancoConfigurado } from "@/lib/firestore";
 
 const acervoVazio: ResumoDoAcervo = {
   tags: [],
@@ -49,7 +49,7 @@ export default async function Painel(props: PageProps<"/">) {
     } catch (erro) {
       console.error("[painel] falha ao listar:", erro);
       falha =
-        "Não consegui falar com o banco. Confere as variáveis do Supabase e se a tabela `itens` já foi criada.";
+        "Não consegui falar com o banco. Confere as variáveis FIREBASE_* e se o Firestore já foi criado no projeto.";
     }
   }
 
@@ -122,8 +122,9 @@ export default async function Painel(props: PageProps<"/">) {
 
       {!bancoConfigurado() && (
         <p className="mb-4 rounded-xl border border-amarelo/40 bg-amarelo/10 px-4 py-3 text-sm text-amarelo">
-          Falta configurar <code>SUPABASE_URL</code> e{" "}
-          <code>SUPABASE_SERVICE_ROLE_KEY</code>. Veja o README.
+          Falta configurar <code>FIREBASE_PROJECT_ID</code>,{" "}
+          <code>FIREBASE_CLIENT_EMAIL</code> e <code>FIREBASE_PRIVATE_KEY</code>.
+          Veja o README.
         </p>
       )}
 

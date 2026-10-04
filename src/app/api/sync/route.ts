@@ -10,7 +10,7 @@ import {
   type Item,
 } from "@/lib/itens";
 import { tokenSyncConfere } from "@/lib/sessao";
-import { bancoConfigurado } from "@/lib/supabase";
+import { bancoConfigurado } from "@/lib/firestore";
 
 /**
  * A porta que o `nuvem push` usa.

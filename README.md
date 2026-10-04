@@ -6,7 +6,7 @@ qualquer lugar, e sincronizada com uma pasta do seu computador por um
 
 Duas metades:
 
-- **o painel** (Next.js + Supabase): escreve, busca, filtra, funciona no celular
+- **o painel** (Next.js + Firestore): escreve, busca, filtra, funciona no celular
   e dá pra instalar na tela de início;
 - **o CLI** (`cli/nuvem.mjs`): `status`, `push`, `pull` e `sync` em cima de uma
   pasta de arquivos `.md`.
@@ -17,14 +17,20 @@ impressão digital do conteúdo, e quando ela mudou dos dois lados a resposta é
 
 ---
 
-## Passo 1 — banco no Supabase
+## Passo 1 — banco no Firebase
 
-1. Crie um projeto em [supabase.com](https://supabase.com) (o plano grátis
-   sobra).
-2. Abra **SQL Editor**, cole o conteúdo de [`supabase/schema.sql`](supabase/schema.sql)
-   e rode. Isso cria a tabela `itens` com o RLS ligado e sem policy — ou seja,
-   as chaves públicas não leem nada.
-3. Em **Project Settings > API**, anote a **URL** e a **service_role key**.
+1. Em [console.firebase.google.com](https://console.firebase.google.com), crie um
+   projeto (pode desativar o Google Analytics).
+2. **Criação > Firestore Database > Criar banco de dados**: edição **Standard**,
+   local **`southamerica-east1`** (São Paulo — não dá pra mudar depois) e modo
+   **Produção**. Nesse modo as regras fecham todo acesso público; só o servidor
+   do app entra, com a chave de administrador. Não precisa criar regra nem índice.
+3. **Configurações do projeto > Contas de serviço > Gerar nova chave privada.**
+   Baixa um `.json` — ele equivale a uma senha de administrador do banco, então
+   **não guarde na pasta do projeto** nem suba pro GitHub.
+4. Do `.json`, você vai usar `project_id`, `client_email` e `private_key`.
+
+O plano gratuito (Spark) basta: 50 mil leituras por dia.
 
 ## Passo 2 — variáveis
 
@@ -32,8 +38,10 @@ Copie `.env.example` para `.env.local` e preencha:
 
 | variável | pra que serve |
 | --- | --- |
-| `SUPABASE_URL` | endereço do projeto |
-| `SUPABASE_SERVICE_ROLE_KEY` | chave do servidor (nunca vai pro navegador) |
+| `FIREBASE_PROJECT_ID` | o `project_id` do `.json` |
+| `FIREBASE_CLIENT_EMAIL` | o `client_email` do `.json` |
+| `FIREBASE_PRIVATE_KEY` | o `private_key` do `.json`, com os `
+` como estão (nunca vai pro navegador) |
 | `SENHA` | a senha que você digita em `/entrar` |
 | `SESSAO_SEGREDO` | assina o cookie de sessão |
 | `TOKEN_SYNC` | o token que o CLI usa |
@@ -68,7 +76,7 @@ git remote add origin https://github.com/SEU-USUARIO/zxp-mobilecomputer.git && g
 ```
 
 Depois importe em [vercel.com/new](https://vercel.com/new) e, em **Settings >
-Environment Variables**, cadastre as mesmas cinco variáveis do passo 2. Daí em
+Environment Variables**, cadastre as mesmas seis variáveis do passo 2. Daí em
 diante, cada `git push` na `main` republica o painel.
 
 No celular: abra o endereço da Vercel, "Adicionar à tela de início", e ele abre
@@ -183,23 +191,28 @@ src/
   components/             Editor, CapturaRapida, Busca, CartaoItem, Etiqueta
   lib/
     tipos.ts              vocabulário puro (tipos, slug, hash) — roda nos dois lados
-    itens.ts              tudo que fala com a tabela
-    supabase.ts           REST do Supabase, sem SDK
+    itens.ts              tudo que fala com a coleção `itens`
+    firestore.ts          conexão com o Firestore (SDK de administrador)
     sessao.ts             HMAC do cookie e conferência dos segredos
     markdown.ts           markdown -> HTML, escapando antes
   proxy.ts                barra quem não tem sessão (o antigo middleware)
 cli/nuvem.mjs             o CLI inteiro, sem dependências
-supabase/schema.sql       a tabela
 ```
 
 ### Por que assim
 
-- **Uma tabela só.** Projeto, ideia e nota são o mesmo objeto com etiquetas
-  diferentes. Três tabelas seriam três telas, três consultas e uma busca que
-  não atravessa nada.
-- **Sem SDK.** O Supabase é HTTP; usar `fetch` direto mantém o projeto em três
-  dependências (`next`, `react`, `react-dom`) e o cold start curto — que é o que
-  se sente quando você abre isto na rua.
+- **Uma coleção só.** Projeto, ideia e nota são o mesmo objeto com etiquetas
+  diferentes. Coleções separadas seriam três telas, três consultas e uma busca
+  que não atravessa nada.
+- **O slug é o id do documento.** Buscar por slug é uma leitura direta, e criar
+  um documento que já existe falha — é essa falha que decide o slug livre
+  (`ideia`, `ideia-2`...), sem brecha entre "ver se está livre" e "gravar".
+- **Filtro, ordem e busca em memória.** O Firestore não busca trecho de texto, e
+  filtro combinado com ordenação pede índice composto — um passo a mais de
+  configuração. Em troca, a busca ignora acento e maiúscula (`reuniao` acha
+  "Reunião"). O custo é uma leitura por item a cada tela, e uma tela lê o acervo
+  uma vez só. Com 200 itens, são 250 telas por dia dentro da cota gratuita; se um
+  dia isso apertar, o remédio é cachear a leitura, não trocar de banco.
 - **Apagar é marcar.** Sem a data de apagado, o `pull` não teria como distinguir
   "isto foi apagado" de "isto ainda não chegou aqui", e apagaria arquivo à toa.
 - **A sessão é um cookie assinado.** Um usuário, uma senha, zero tabela de
@@ -210,7 +223,6 @@ supabase/schema.sql       a tabela
 
 ## Se um dia quiser mais
 
-- anexar imagem (Supabase Storage + um campo `anexos`);
-- histórico de versões (uma tabela `versoes` gravada a cada `atualizarItem`);
-- busca com acento tolerante (`pg_trgm` e `unaccent` no Postgres);
+- anexar imagem (Firebase Storage + um campo `anexos`);
+- histórico de versões (uma subcoleção `versoes` gravada a cada `atualizarItem`);
 - rodar o `nuvem sync` sozinho, por tarefa agendada, ao ligar o computador.

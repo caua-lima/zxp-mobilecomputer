@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Rede de segurança: qualquer erro no servidor (Supabase fora do ar, tabela que
- * não existe ainda) vira esta tela em vez de uma página em branco.
+ * Rede de segurança: qualquer erro no servidor (Firestore fora do ar, projeto
+ * ainda sem banco criado) vira esta tela em vez de uma página em branco.
  */
 export default function Erro({
   error,
