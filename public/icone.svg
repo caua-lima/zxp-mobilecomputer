@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nuvem">
-  <rect width="512" height="512" rx="112" fill="#0b0d10"/>
-  <path d="M168 344h176a72 72 0 0 0 8-143.5A104 104 0 0 0 152 176a80 80 0 0 0 16 168Z"
-        fill="none" stroke="#7aa2f7" stroke-width="26" stroke-linejoin="round"/>
-  <path d="M226 268h60M226 306h84" stroke="#7aa2f7" stroke-width="20" stroke-linecap="round" opacity="0.55"/>
-</svg>

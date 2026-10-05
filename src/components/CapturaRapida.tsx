@@ -54,7 +54,7 @@ export function CapturaRapida({
         }}
         placeholder="Anotar rápido — uma ideia, um projeto, um lembrete…"
         // No celular a frase fica com a linha inteira; tipo e botão descem.
-        className="flex-1 basis-full bg-transparent px-2 py-1.5 text-sm text-texto outline-none sm:basis-0 sm:min-w-48 placeholder:text-suave/60"
+        className="flex-1 basis-full bg-transparent px-2 py-1.5 text-sm text-texto outline-none sm:basis-0 sm:min-w-48 placeholder:text-fraco"
       />
 
       <select

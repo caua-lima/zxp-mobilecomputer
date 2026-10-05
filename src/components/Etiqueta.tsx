@@ -1,10 +1,11 @@
-type Tom = "neutro" | "destaque" | "verde" | "amarelo" | "perigo";
+type Tom = "neutro" | "destaque" | "verde" | "aviso" | "pausa" | "perigo";
 
 const tons: Record<Tom, string> = {
   neutro: "border-borda text-suave",
   destaque: "border-destaque/40 text-destaque",
   verde: "border-verde/40 text-verde",
-  amarelo: "border-amarelo/40 text-amarelo",
+  aviso: "border-aviso/40 text-aviso",
+  pausa: "border-pausa/50 text-pausa",
   perigo: "border-perigo/40 text-perigo",
 };
 

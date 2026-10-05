@@ -24,7 +24,7 @@ export function FormEntrar({ destino }: { destino: string }) {
           evento.preventDefault();
           formulario.current?.requestSubmit();
         }}
-        className="rounded-xl border border-borda bg-superficie px-4 py-3 text-base text-texto outline-none transition-colors focus:border-destaque placeholder:text-suave/60"
+        className="rounded-xl border border-borda bg-superficie px-4 py-3 text-base text-texto outline-none transition-colors focus:border-destaque placeholder:text-fraco"
       />
 
       {estado.erro && <p className="text-sm text-perigo">{estado.erro}</p>}

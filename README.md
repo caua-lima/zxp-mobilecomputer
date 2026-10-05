@@ -1,6 +1,6 @@
-# Nuvem
+# ZXP Mobile Computer
 
-Sua nuvem particular de projetos, ideias e notas — aberta no navegador de
+Um produto ZXP Solutions: sua nuvem particular de projetos, ideias e notas — aberta no navegador de
 qualquer lugar, e sincronizada com uma pasta do seu computador por um
 `nuvem push`.
 

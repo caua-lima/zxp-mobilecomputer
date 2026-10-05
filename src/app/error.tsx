@@ -16,7 +16,7 @@ export default function Erro({
       <p className="text-sm text-suave">Alguma coisa quebrou aqui do lado.</p>
 
       {error.digest && (
-        <code className="text-xs text-suave/70">{error.digest}</code>
+        <code className="text-xs text-fraco">{error.digest}</code>
       )}
 
       <button

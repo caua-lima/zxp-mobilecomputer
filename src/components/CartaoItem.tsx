@@ -5,9 +5,9 @@ import { quandoFoi } from "@/lib/datas";
 import { contarTarefas, resumo } from "@/lib/markdown";
 import { rotuloSituacao, rotuloTipo, type Item, type Situacao } from "@/lib/tipos";
 
-const tomDaSituacao: Record<Situacao, "neutro" | "verde" | "amarelo"> = {
+const tomDaSituacao: Record<Situacao, "neutro" | "verde" | "pausa"> = {
   ativo: "neutro",
-  pausado: "amarelo",
+  pausado: "pausa",
   feito: "verde",
   arquivado: "neutro",
 };

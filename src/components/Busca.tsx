@@ -66,7 +66,7 @@ export function Busca({ valor, extras }: { valor: string; extras: string }) {
     <div className="relative mb-3">
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm text-suave/70"
+        className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm text-fraco"
       >
         ⌕
       </span>
@@ -78,7 +78,7 @@ export function Busca({ valor, extras }: { valor: string; extras: string }) {
         onChange={(evento) => setTexto(evento.target.value)}
         placeholder="Buscar no título e no conteúdo…"
         aria-label="Buscar"
-        className="w-full rounded-xl border border-borda bg-superficie py-2.5 pr-4 pl-9 text-sm text-texto outline-none transition-colors focus:border-destaque placeholder:text-suave/60"
+        className="w-full rounded-xl border border-borda bg-superficie py-2.5 pr-4 pl-9 text-sm text-texto outline-none transition-colors focus:border-destaque placeholder:text-fraco"
       />
     </div>
   );

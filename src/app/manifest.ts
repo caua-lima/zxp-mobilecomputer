@@ -1,22 +1,25 @@
 import type { MetadataRoute } from "next";
 
-/** Deixa a Nuvem instalável na tela de início do celular, sem barra de navegador. */
+/** Deixa o ZXP Mobile Computer instalável na tela de início, sem barra de navegador. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Nuvem",
-    short_name: "Nuvem",
-    description: "Seus projetos, ideias e notas — de qualquer lugar.",
+    name: "ZXP Mobile Computer",
+    short_name: "ZXP Mobile",
+    description:
+      "Seus projetos, ideias e notas — de qualquer lugar. Um produto ZXP Solutions.",
     start_url: "/",
+    scope: "/",
     display: "standalone",
-    background_color: "#0b0d10",
-    theme_color: "#0b0d10",
+    background_color: "#10100E",
+    theme_color: "#10100E",
     lang: "pt-BR",
     icons: [
-      { src: "/icone.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "/manifest-icon-192", sizes: "192x192", type: "image/png" },
+      { src: "/manifest-icon-512", sizes: "512x512", type: "image/png" },
       {
-        src: "/icone.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/manifest-icon-mascaravel",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "maskable",
       },
     ],

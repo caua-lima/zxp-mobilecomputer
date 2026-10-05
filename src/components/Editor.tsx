@@ -225,7 +225,7 @@ export function Editor({
 
         <span
           className={`min-w-0 flex-1 truncate text-xs ${
-            mudou && !salvando ? "text-amarelo" : "text-suave"
+            mudou && !salvando ? "text-aviso" : "text-suave"
           }`}
         >
           {situacaoDoSalvamento}
@@ -279,7 +279,7 @@ export function Editor({
           placeholder="Título"
           autoFocus={!item}
           maxLength={200}
-          className="w-full bg-transparent text-2xl font-semibold text-texto outline-none placeholder:text-suave/50"
+          className="font-display w-full bg-transparent text-2xl font-semibold text-texto outline-none placeholder:text-fraco"
         />
 
         <div className="flex flex-wrap gap-2">
@@ -346,7 +346,7 @@ export function Editor({
             Ler
           </button>
 
-          <span className="ml-auto hidden text-[11px] text-suave/70 sm:block">
+          <span className="ml-auto hidden text-[11px] text-fraco sm:block">
             {modo === "ler"
               ? "toque no texto pra editar ali · toque no ○ pra marcar"
               : "Ctrl+S salva · Esc volta pra leitura"}
@@ -365,7 +365,7 @@ export function Editor({
           hidden={modo === "ler"}
           placeholder="Escreve aqui. Aceita markdown: # título, - lista, - [ ] tarefa, **negrito**."
           spellCheck
-          className="min-h-[55vh] flex-1 resize-none rounded-2xl border border-borda bg-superficie p-4 font-mono text-sm leading-relaxed text-texto outline-none transition-colors focus:border-destaque placeholder:text-suave/50"
+          className="min-h-[55vh] flex-1 resize-none rounded-2xl border border-borda bg-superficie p-4 font-mono text-sm leading-relaxed text-texto outline-none transition-colors focus:border-destaque placeholder:text-fraco"
         />
 
         {modo === "ler" &&
@@ -386,7 +386,7 @@ export function Editor({
           ))}
 
         {item && (
-          <p className="pb-2 text-[11px] text-suave/70">
+          <p className="pb-2 text-[11px] text-fraco">
             criado em {dataCompleta(item.criado_em)} · #{item.slug}
           </p>
         )}

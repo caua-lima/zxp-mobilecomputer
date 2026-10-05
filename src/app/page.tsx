@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { sair } from "./acoes";
 import { Busca } from "@/components/Busca";
+import { MarcaHorizontal } from "@/components/Marca";
 import { CapturaRapida } from "@/components/CapturaRapida";
 import { CartaoItem } from "@/components/CartaoItem";
 import { exigirSessao } from "@/lib/guarda";
@@ -91,11 +92,11 @@ export default async function Painel(props: PageProps<"/">) {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-16">
       <header className="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 border-b border-borda bg-fundo/85 px-4 py-3 backdrop-blur">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          Nuvem
+        <Link href="/" aria-label="ZXP Mobile Computer — início">
+          <MarcaHorizontal />
         </Link>
 
-        <span className="text-xs text-suave">
+        <span className="hidden text-xs text-suave min-[430px]:inline">
           {filtrando
             ? `${itens.length} de ${totalNoAcervo}`
             : `${itens.length} ${itens.length === 1 ? "item" : "itens"}`}
@@ -121,7 +122,7 @@ export default async function Painel(props: PageProps<"/">) {
       </header>
 
       {!bancoConfigurado() && (
-        <p className="mb-4 rounded-xl border border-amarelo/40 bg-amarelo/10 px-4 py-3 text-sm text-amarelo">
+        <p className="mb-4 rounded-xl border border-aviso/40 bg-aviso/10 px-4 py-3 text-sm text-aviso">
           Falta configurar <code>FIREBASE_PROJECT_ID</code>,{" "}
           <code>FIREBASE_CLIENT_EMAIL</code> e <code>FIREBASE_PRIVATE_KEY</code>.
           Veja o README.
@@ -155,7 +156,7 @@ export default async function Painel(props: PageProps<"/">) {
           >
             {rotuloTipo[valor]}
             {acervo.porTipo[valor] > 0 && (
-              <span className="ml-1 text-suave/60">{acervo.porTipo[valor]}</span>
+              <span className="ml-1 text-fraco">{acervo.porTipo[valor]}</span>
             )}
           </Link>
         ))}
@@ -183,7 +184,7 @@ export default async function Painel(props: PageProps<"/">) {
                 href={comFiltro({ tag: nome })}
                 className={chip(false)}
               >
-                #{nome} <span className="text-suave/60">{total}</span>
+                #{nome} <span className="text-fraco">{total}</span>
               </Link>
             ))
           )}
@@ -237,7 +238,7 @@ export default async function Painel(props: PageProps<"/">) {
       )}
 
       {itens.length > 0 && (
-        <p className="mt-6 hidden text-center text-[11px] text-suave/60 sm:block">
+        <p className="mt-6 hidden text-center text-[11px] text-fraco sm:block">
           atalhos: <kbd>/</kbd> buscar · <kbd>n</kbd> novo
         </p>
       )}

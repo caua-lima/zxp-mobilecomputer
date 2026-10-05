@@ -1,24 +1,48 @@
 @import "tailwindcss";
 
 /*
- * Paleta escura e sem cor de marca: isto aqui é ferramenta de uso diário, não
- * peça de campanha. Um único destaque (azul) marca o que é clicável.
+ * Identidade ZXP Solutions.
+ *
+ * DNA da família (vale pra todos os apps): onyx como fundo — nunca preto puro —,
+ * marfim como texto — nunca branco puro —, Sora nos títulos, Inter no corpo e o
+ * "Z" de traço. A cor de assinatura aqui é o dourado da marca. Tema único: a
+ * marca não alterna entre claro e escuro.
+ *
+ * Texto tem três degraus, com contraste conferido sobre onyx e sobre os cartões
+ * (todos acima de 4,5:1, o mínimo WCAG AA pra texto pequeno):
+ *   texto   -> título e conteúdo
+ *   suave   -> apoio e rótulos
+ *   fraco   -> o mais apagado permitido (data, ajuda, placeholder)
+ * Não use opacidade pra apagar texto: `/60` sobre `suave` cai abaixo do mínimo,
+ * e a opacidade do pai se multiplica com a do filho.
  */
 @theme {
-  --color-fundo: #0b0d10;
-  --color-superficie: #13161b;
-  --color-elevado: #1a1e25;
-  --color-borda: #262c35;
-  --color-texto: #e8eaef;
-  --color-suave: #99a1ae;
-  --color-destaque: #7aa2f7;
-  --color-destaque-forte: #a6c1ff;
-  --color-perigo: #f7768e;
-  --color-verde: #82d99a;
-  --color-amarelo: #e0af68;
+  --color-fundo: #10100e;
+  --color-superficie: #1a1916;
+  --color-elevado: #242320;
+  --color-borda: #35332e;
+  --color-texto: #f6f3e8;
+  --color-marfim: #f6f3e8;
+  --color-suave: #c4c1b5;
+  --color-fraco: #a09d91;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  /* Assinatura: o dourado da ZXP Solutions. Onyx sobre ele dá ~10:1. */
+  --color-destaque: #f4b942;
+  --color-destaque-forte: #ffd98a;
+
+  /* Estado, independente da marca de propósito: "feito" e "com problema"
+     precisam ler como estado, não como assinatura. */
+  --color-verde: #4eaf5b;
+  --color-aviso: #e8913a;
+  --color-perigo: #ef6c5c;
+  --color-pausa: #ab82de;
+}
+
+/* As fontes vêm do next/font (layout.tsx) como variáveis; `inline` faz o
+   Tailwind ler o valor delas na hora, em vez de congelar o nome da variável. */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas,
     monospace;
 }
@@ -30,12 +54,22 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  body {
-    font-family: var(--font-sans);
+  /* A seleção usa o dourado cheio, como no resto da família. */
+  ::selection {
+    background: var(--color-destaque);
+    color: var(--color-fundo);
   }
 
-  ::selection {
-    background: color-mix(in oklab, var(--color-destaque) 35%, transparent);
+  /* Foco visível pra quem navega no teclado: dourado, dois pixels. */
+  :focus-visible {
+    outline: 2px solid var(--color-destaque);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
   }
 
   /* Barra de rolagem discreta no desktop. */
@@ -90,7 +124,7 @@
   }
 
   .prosa strong {
-    color: #fff;
+    color: var(--color-marfim);
     font-weight: 600;
   }
 
